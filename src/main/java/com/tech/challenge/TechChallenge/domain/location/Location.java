@@ -1,7 +1,9 @@
 package com.tech.challenge.TechChallenge.domain.location;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,30 +29,38 @@ public class Location implements Serializable {
     @JsonView(Json.Base.class)
     private Long id;
 
+    @NotNull(message = "Active não pode ser null")
     @JsonView(Json.Base.class)
     private Boolean active;
 
+    @Schema(description = "Endereço da localização")
     @JsonView(Json.Base.class)
     private String address;
 
+    @Schema(description = "Número da localização")
     @JsonView(Json.Base.class)
     private String number;
 
+    @Schema(description = "Bairro da localização")
     @JsonView(Json.Base.class)
     private String neighborhood;
 
+    @Schema(description = "Complemento da descrição")
     @JsonView(Json.Base.class)
     private String complement;
 
+    @Schema(description = "CEP da localização")
     @JsonView(Json.Base.class)
     private String zipCode;
 
+    @Schema(description = "Cidade da localização")
     @JsonView(Json.Base.class)
     private String city;
 
+    @Schema(description = "Estado da localização")
     @JsonView(Json.Base.class)
     private String state;
-
+    
     @JsonView(Json.Base.class)
     private Instant lastModifyDate;
 
