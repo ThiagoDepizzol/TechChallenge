@@ -35,7 +35,7 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return username -> userRepository.findByLogin(username)
+        return username -> userRepository.findByLoginAndActiveTrue(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
     }
 
@@ -45,7 +45,7 @@ public class SecurityConfig {
 
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login").permitAll()
+                        .requestMatchers("/login", "/reset-password").permitAll()
                         .anyRequest()
                         .authenticated())
                 .httpBasic(withDefaults());
@@ -61,7 +61,7 @@ public class SecurityConfig {
     @Bean
     public CommandLineRunner createAdmin(final PasswordEncoder encoder) {
         return args -> {
-            if (userRepository.findByLogin("admin").isEmpty()) {
+            if (userRepository.findByLoginAndActiveTrue("admin@fiap.com.br").isEmpty()) {
 
                 final User admin = new User();
 

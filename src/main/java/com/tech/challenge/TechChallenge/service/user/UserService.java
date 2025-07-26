@@ -92,9 +92,11 @@ public class UserService {
 
         userRepository.findById(id)
                 .ifPresent(user -> {
+
                     user.setActive(false);
 
                     userRepository.save(user);
+
                 });
     }
 

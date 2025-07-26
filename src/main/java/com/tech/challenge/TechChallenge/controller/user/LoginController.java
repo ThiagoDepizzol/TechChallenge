@@ -48,9 +48,12 @@ public class LoginController {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             return ResponseEntity.ok(new MessageResponseDTO("Usuário logado com sucesso"));
+
         } catch (AuthenticationException e) {
+
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new MessageResponseDTO("Usuário ou senha inválidos"));
+
         }
     }
 

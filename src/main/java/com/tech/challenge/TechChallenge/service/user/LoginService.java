@@ -1,20 +1,18 @@
 package com.tech.challenge.TechChallenge.service.user;
 
 import com.tech.challenge.TechChallenge.domain.user.User;
-import com.tech.challenge.TechChallenge.domain.user.dto.UserLoginDTO;
 import com.tech.challenge.TechChallenge.domain.user.dto.UserResetPasswordDTO;
 import com.tech.challenge.TechChallenge.repositories.user.UserRepository;
 import com.tech.challenge.TechChallenge.service.location.LocationService;
-import com.tech.challenge.TechChallenge.utils.exceptions.InvalidCredentialsException;
 import com.tech.challenge.TechChallenge.utils.exceptions.InvalidPasswordException;
 import com.tech.challenge.TechChallenge.utils.exceptions.UserNotFoundException;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Objects;
 
 @Service
 public class LoginService {
@@ -27,10 +25,13 @@ public class LoginService {
 
     public final UserAuthorityService userAuthorityService;
 
-    public LoginService(final UserRepository userRepository, final LocationService locationService, final UserAuthorityService userAuthorityService) {
+    private final PasswordEncoder passwordEncoder;
+
+    public LoginService(final UserRepository userRepository, final LocationService locationService, final UserAuthorityService userAuthorityService, final PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.locationService = locationService;
         this.userAuthorityService = userAuthorityService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public void resetPassword(@NotNull final UserResetPasswordDTO dto) {
@@ -38,10 +39,19 @@ public class LoginService {
         logger.info("resetPassword -> {}", dto);
 
         final User user = userRepository.findByEmail(dto.getLogin())
-                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado.")); // Usando UserNotFoundException
+                .orElseThrow(() -> {
 
-        if (!Objects.equals(user.getPassword(), dto.getOldPassword())) {
-            throw new InvalidPasswordException("Senha antiga incorreta.");
+                    logger.info("Email incorreto");
+
+                    return new UserNotFoundException("Usuário ou senha inválidos");
+
+                });
+
+        if (!passwordEncoder.matches(dto.getOldPassword(), user.getPassword())) {
+
+            logger.info("Senha antiga incorreta");
+
+            throw new InvalidPasswordException("Usuário ou senha inválidos");
         }
 
         user.setPassword(dto.getNewPassword());
@@ -49,14 +59,5 @@ public class LoginService {
 
         userRepository.save(user);
     }
-
-    public void login(@NotNull final UserLoginDTO dto) {
-
-        userRepository.getByLogin(dto.getLogin(), dto.getPassword())
-                .orElseThrow(() -> new InvalidCredentialsException("Usuário ou senha inválidos"));
-
-
-    }
-
 
 }
