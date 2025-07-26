@@ -1,12 +1,13 @@
 package com.tech.challenge.TechChallenge.domain.location;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.tech.challenge.TechChallenge.domain.generic.DefaultEntity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.time.Instant;
 import java.util.Objects;
 import java.util.StringJoiner;
 
@@ -14,11 +15,11 @@ import java.util.StringJoiner;
 @Setter
 @Entity
 @Table(name = "loc_locations")
-public class Location implements Serializable {
+public class Location extends DefaultEntity implements Serializable {
 
     public interface Json {
 
-        interface Base {
+        interface Base extends DefaultEntity.Json.Base {
         }
     }
 
@@ -26,9 +27,6 @@ public class Location implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonView(Json.Base.class)
     private Long id;
-
-    @JsonView(Json.Base.class)
-    private Boolean active;
 
     @JsonView(Json.Base.class)
     private String address;
@@ -42,6 +40,8 @@ public class Location implements Serializable {
     @JsonView(Json.Base.class)
     private String complement;
 
+    @NotNull
+    @Column(nullable = false)
     @JsonView(Json.Base.class)
     private String zipCode;
 
@@ -50,9 +50,6 @@ public class Location implements Serializable {
 
     @JsonView(Json.Base.class)
     private String state;
-
-    @JsonView(Json.Base.class)
-    private Instant lastModifyDate;
 
     @Override
     public boolean equals(Object o) {
@@ -66,11 +63,14 @@ public class Location implements Serializable {
         return Objects.hashCode(id);
     }
 
+    public boolean hasId() {
+        return Objects.nonNull(getId());
+    }
+
     @Override
     public String toString() {
         return new StringJoiner(", ", Location.class.getSimpleName() + "[", "]")
                 .add("id=" + id)
-                .add("active=" + active)
                 .add("address='" + address + "'")
                 .add("number='" + number + "'")
                 .add("neighborhood='" + neighborhood + "'")
@@ -78,7 +78,6 @@ public class Location implements Serializable {
                 .add("zipCode='" + zipCode + "'")
                 .add("city='" + city + "'")
                 .add("state='" + state + "'")
-                .add("lastModifyDate=" + lastModifyDate)
                 .toString();
     }
 }

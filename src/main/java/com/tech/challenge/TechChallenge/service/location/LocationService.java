@@ -27,47 +27,35 @@ public class LocationService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Location> findAll(@NotNull final Pageable pageable) {
+    public Page<Location> findAllActive(@NotNull final Pageable pageable) {
 
-        logger.info("findAll -> {}", pageable);
+        logger.info("findAllActive -> {}", pageable);
 
-        return this.locationRepository.findAll(pageable);
+        return this.locationRepository.findAllActive(pageable);
     }
 
     @Transactional(readOnly = true)
-    public Optional<Location> findById(@NotNull final Long id) {
+    public Optional<Location> findOneActiveById(@NotNull final Long id) {
 
-        logger.info("findById -> {}", id);
+        logger.info("findOneActiveById -> {}", id);
 
-        return this.locationRepository.findById(id);
+        return this.locationRepository.findOneActiveById(id);
     }
 
-    public Location created(@NotNull final Location location) {
+    public Location save(@NotNull final Location location) {
 
         logger.info("created -> {}", location);
 
+        final String zipLocation = Optional.ofNullable(location.getZipCode())
+                .map(zipCode -> zipCode.replaceAll("[^a-zA-Z0-9]", ""))
+                .orElse(null);
+
+
         location.setLastModifyDate(Instant.now());
+        location.setZipCode(zipLocation);
 
         return Optional.of(this.locationRepository.save(location))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR));
-    }
-
-
-    public Location update(@NotNull final Location location, @NotNull final Long id) {
-
-        logger.info("update -> {}", location);
-
-        return locationRepository.findById(id)
-                .map(bdLocation -> {
-
-                    location.setId(bdLocation.getId());
-                    location.setLastModifyDate(Instant.now());
-
-                    return this.locationRepository.save(location);
-
-                })
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
     }
 
     public void delete(@NotNull final Long id) {
@@ -83,5 +71,17 @@ public class LocationService {
 
                 });
 
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Location> findOneByZipCode(@NotNull final String zipCode) {
+
+        logger.info("findOneByZipCode -> {}", zipCode);
+
+        final String zipLocation = Optional.ofNullable(zipCode)
+                .map(code -> code.replaceAll("[^a-zA-Z0-9]", ""))
+                .orElse(null);
+
+        return this.locationRepository.findOneByZipCode(zipLocation);
     }
 }

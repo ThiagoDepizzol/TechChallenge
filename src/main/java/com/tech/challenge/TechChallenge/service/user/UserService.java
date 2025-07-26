@@ -2,10 +2,12 @@ package com.tech.challenge.TechChallenge.service.user;
 
 import com.tech.challenge.TechChallenge.domain.location.Location;
 import com.tech.challenge.TechChallenge.domain.user.User;
+import com.tech.challenge.TechChallenge.domain.user.UserAuthority;
 import com.tech.challenge.TechChallenge.domain.user.dto.UserLoginDTO;
 import com.tech.challenge.TechChallenge.domain.user.dto.UserResetPasswordDTO;
 import com.tech.challenge.TechChallenge.repositories.user.UserRepository;
 import com.tech.challenge.TechChallenge.service.location.LocationService;
+import com.tech.challenge.TechChallenge.util.HashService;
 import com.tech.challenge.TechChallenge.utils.exceptions.InvalidCredentialsException;
 import com.tech.challenge.TechChallenge.utils.exceptions.InvalidPasswordException;
 import com.tech.challenge.TechChallenge.utils.exceptions.UserNotFoundException;
@@ -14,14 +16,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+
+import static java.util.function.Predicate.not;
 
 @Service
 public class UserService {
@@ -32,9 +33,12 @@ public class UserService {
 
     public final LocationService locationService;
 
-    public UserService(final UserRepository userRepository, final LocationService locationService) {
+    public final UserAuthorityService userAuthorityService;
+
+    public UserService(final UserRepository userRepository, final LocationService locationService, final UserAuthorityService userAuthorityService) {
         this.userRepository = userRepository;
         this.locationService = locationService;
+        this.userAuthorityService = userAuthorityService;
     }
 
     @Transactional(readOnly = true)
@@ -42,7 +46,7 @@ public class UserService {
 
         logger.info("findAll -> {}", pageable);
 
-        return userRepository.findAll(pageable);
+        return userRepository.findAllActive(pageable);
     }
 
     @Transactional(readOnly = true)
@@ -50,40 +54,37 @@ public class UserService {
 
         logger.info("findById -> {}", id);
 
-        return userRepository.findById(id);
+        return userRepository.findOneActiveById(id);
     }
 
-    public User created(@NotNull final User user) {
+    public User save(@NotNull final User user) {
 
         logger.info("created -> {}", user);
 
         final Location location = Optional.ofNullable(user.getLocation())
-                .filter(loc -> loc.getId() != null)
-                .flatMap(loc -> locationService.findById(loc.getId()))
-                .orElseGet(() -> locationService.created(user.getLocation()));
+                .flatMap(loc -> locationService.findOneByZipCode(loc.getZipCode()))
+                .orElseGet(() -> locationService.save(user.getLocation()));
+
+        final List<UserAuthority> authorities = Optional.ofNullable(user.getAuthorities())
+                .filter(not(Set::isEmpty))
+                .map(ArrayList::new)
+                .orElseGet(ArrayList::new);
+        user.setAuthorities(null);
+
+        Optional.ofNullable(user.getPassword())
+                .map(HashService::hash)
+                .ifPresent(user::setPassword);
 
         user.setLocation(location);
         user.setLastModifyDate(Instant.now());
 
-        return userRepository.save(user);
+        return Optional.of(userRepository.save(user))
+                .map(savedUser -> {
+                    userAuthorityService.addAuthoritiesToUser(savedUser, authorities);
 
-    }
-
-    public User update(@NotNull final User user, @NotNull final Long id) {
-
-        logger.info("update -> {}", user);
-
-        return userRepository.findById(id)
-                .map(User::loadLocation)
-                .map(bdUser -> {
-
-                    user.setId(bdUser.getId());
-                    user.setLastModifyDate(Instant.now());
-
-                    return this.userRepository.save(user);
-
+                    return savedUser;
                 })
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new IllegalStateException("User could not be saved"));
 
     }
 
