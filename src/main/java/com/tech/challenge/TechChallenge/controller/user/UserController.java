@@ -62,7 +62,7 @@ public class UserController {
                 .loadAuthorities());
     }
 
-    @PutMapping("/{id}")
+    @PutMapping
     @JsonView(User.Json.All.class)
     public ResponseEntity<User> update(@RequestBody final User user) {
 

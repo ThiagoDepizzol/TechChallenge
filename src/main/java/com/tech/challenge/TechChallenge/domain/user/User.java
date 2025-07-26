@@ -8,18 +8,17 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.Hibernate;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "usr_users")
-public class User extends DefaultEntity implements Serializable {
+public class User extends DefaultEntity implements Serializable, UserDetails {
 
     public interface Json {
 
@@ -45,7 +44,7 @@ public class User extends DefaultEntity implements Serializable {
     private Long id;
 
     @JsonView(Json.Base.class)
-    private String name;
+    private String username;
 
     @JsonView(Json.Base.class)
     private String login;
@@ -54,16 +53,41 @@ public class User extends DefaultEntity implements Serializable {
     private String password;
 
     @JoinColumn(name = "loc_location_id")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JsonView(Json.WithLocation.class)
     private Location location;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = "users", allowSetters = true)
     @JsonView(Json.WithAuthorities.class)
-    private Set<UserAuthority> authorities = new HashSet<>();
+    private Set<UserAuthority> userAuthorities = new HashSet<>();
 
     public User() {
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.emptyList(); // sem roles
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 
     @Override
@@ -88,7 +112,7 @@ public class User extends DefaultEntity implements Serializable {
     }
 
     public User loadAuthorities() {
-        Hibernate.initialize(authorities);
+        Hibernate.initialize(userAuthorities);
         return this;
     }
 
@@ -96,7 +120,7 @@ public class User extends DefaultEntity implements Serializable {
     public String toString() {
         return new StringJoiner(", ", User.class.getSimpleName() + "[", "]")
                 .add("id=" + id)
-                .add("name='" + name + "'")
+                .add("username='" + username + "'")
                 //                .add("login='" + login + "'")
                 //                .add("password='" + password + "'")
                 //                .add("location=" + location)

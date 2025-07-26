@@ -11,6 +11,8 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
+    Optional<User> findByLogin(String username);
+
     @Query(nativeQuery = true, //
             value = "select users.* " +//
                     "from usr_users users " +//
