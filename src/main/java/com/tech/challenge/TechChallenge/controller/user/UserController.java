@@ -3,6 +3,7 @@ package com.tech.challenge.TechChallenge.controller.user;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.tech.challenge.TechChallenge.domain.user.User;
 import com.tech.challenge.TechChallenge.service.user.UserService;
+import com.tech.challenge.TechChallenge.utils.MessageResponseDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
@@ -76,19 +77,13 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") final Long id) {
+    public ResponseEntity<?> delete(@PathVariable("id") final Long id) {
 
         logger.info("DELETE -> /usr/users/{id} -> {}", id);
 
         userService.delete(id);
 
-        return ResponseEntity.status(HttpStatus.NO_CONTENT.value())
-                .build();
-    }
-
-    @GetMapping("/teste")
-    public String test() {
-        return "OK!";
+        return ResponseEntity.ok(new MessageResponseDTO("Usuário excluído com sucesso"));
     }
 
 }

@@ -3,6 +3,7 @@ package com.tech.challenge.TechChallenge.controller.location;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.tech.challenge.TechChallenge.domain.location.Location;
 import com.tech.challenge.TechChallenge.service.location.LocationService;
+import com.tech.challenge.TechChallenge.utils.MessageResponseDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
@@ -68,14 +69,13 @@ public class LocationController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") final Long id) {
+    public ResponseEntity<?> delete(@PathVariable("id") final Long id) {
 
         logger.info("DELETE -> /loc/locations/{id} -> {}", id);
 
         locationService.delete(id);
 
-        return ResponseEntity.status(HttpStatus.NO_CONTENT.value())
-                .build();
+        return ResponseEntity.ok(new MessageResponseDTO("Localização excluída com sucesso"));
     }
 
 
