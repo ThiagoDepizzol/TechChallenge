@@ -67,7 +67,7 @@ public class User extends DefaultEntity implements Serializable, UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList(); // sem roles
+        return Collections.emptyList();
     }
 
     @Override

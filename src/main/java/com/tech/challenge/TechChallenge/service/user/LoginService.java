@@ -54,7 +54,7 @@ public class LoginService {
             throw new InvalidPasswordException("Usuário ou senha inválidos");
         }
 
-        user.setPassword(dto.getNewPassword());
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
         user.setLastModifyDate(Instant.now());
 
         userRepository.save(user);
